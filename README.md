@@ -1,7 +1,8 @@
 # Posteriori
 
-Making probabilistic calculations as straightforward as `2 + 2 = 4`. Just messing around,
-you probably don't want to use this.
+Making probabilistic calculations as straightforward as `2 + 2 = 4`.
+
+Just messing around, you might not want to use this yet.
 
 ```python
 >>> from posteriori import between
@@ -28,6 +29,10 @@ Give Posteriori an upper and lower boundary (aim for the 5th and 95th percentile
 
 Under the hood, Posteriori fits everything to a Gamma distribution and calculates outcomes using Monte Carlo simulations. It works great across a range of different scenarios, see `error.txt` for benchmarks.
 
-Inspired by Frank Krueger's [Calca](http://calca.io/), Douglas Hubbard's 
-[How To Measure Anything](http://www.amazon.com/How-Measure-Anything-Intangibles-Business-ebook/dp/B00INUYS2U/)
-and Ozzie Gooen's [Guesstimate](http://www.getguesstimate.com/).
+Inspired by Frank Krueger's [Calca][1], Douglas Hubbard's 
+[How To Measure Anything][2], the [Sheffield Elicitation Framework][3] and and Ozzie Gooen's [Guesstimate][4].
+
+[1]: http://calca.io/
+[2]: http://www.amazon.com/How-Measure-Anything-Intangibles-Business-ebook/dp/B00INUYS2U/
+[3]: http://www.tonyohagan.co.uk/shelf/
+[4]: http://www.getguesstimate.com/

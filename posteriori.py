@@ -3,7 +3,11 @@
 
 import numpy as np
 import scipy
-from scipy.stats import distributions
+from scipy.stats import describe, distributions
+from scipy.stats import mstats
+
+
+from utils import proxy, vectorize, hpd
 
 
 N = 10000
@@ -44,41 +48,86 @@ def polygon(*quantiles, bounds=(0.05, 0.95)):
     return poly
 
 
-METHODS = [
-    'rvs', 'pdf', 'cdf', 'sf', 'ppf', 'isf',
-    'moment', 'median', 'mean', 'std', 'var', 'interval'
-    ]
+proxied = proxy('distribution')
 
-# Does the job, but we need to better control what happens when
-# doing calculations -- ideally the result would still be a random
-# variable but the methods above would use Monte Carlo simulation
-# either directly or -- in simple cases -- by calculating the 
-# parameters of the new distribution (e.g. normal + normal)
-#
-# So we need implementations of rvs, pdf, cdf, sf, ppf and isf
-# (which should be easy enough.)
-# 
-# cf. http://docs.scipy.org/doc/numpy-1.10.1/user/basics.subclassing.html
 class RandomVariable(np.ndarray):
+    # cf. http://docs.scipy.org/doc/numpy-1.10.1/user/basics.subclassing.html
+    # for details on subclassing an ndarray
     def __new__(cls, distribution):
         sample = distribution.rvs(N)
         obj = sample.view(cls)
         obj.distribution = distribution
-        for method in METHODS:
-            setattr(obj, method, getattr(distribution, method))
         return obj
 
-    def __array_finalize__(self, obj):
-        self.distribution = getattr(obj, 'distribution', None)
+    @proxied
+    def rvs(self, n):
+        return np.random.choice(self, size=n, replace=True)
 
+    @vectorize
+    @proxied
+    def pdf(self, quantile):
+        raise NotImplementedError()
+
+    @vectorize
+    @proxied
+    def cdf(self, quantile):
+        return np.mean(self <= quantile)
+        
+    @vectorize
+    @proxied
+    def sf(self, quantile):
+        return 1 - self.cdf(quantile)        
+
+    @vectorize
+    @proxied
+    def ppf(self, prob):
+        return mstats.mquantiles(self, prob)[0]
+
+    @vectorize
+    @proxied
+    def isf(self, prob):
+        return mstats.mquantiles(self, 1 - prob)[0] 
+
+    @proxied
+    def moment(self, order):
+        return mstats.moment(self, order)
+
+    @proxied
+    def interval(self, alpha):
+        return tuple(hpd(self, 1 - alpha))
+
+    @proxied
+    def mean(self, *vargs, **kwargs):
+        return np.asarray(self).mean(*vargs, **kwargs)
+
+    @proxied
+    def median(self, *vargs, **kwargs):
+        return np.asarray(self).median(*vargs, **kwargs)
+
+    @proxied
+    def std(self, *vargs, **kwargs):
+        return np.asarray(self).std(*vargs, **kwargs)
+
+    @proxied
+    def var(self, *vargs, **kwargs):
+        return np.asarray(self).var(*vargs, **kwargs)
+
+    # TODO
     # Gamma parameters are not very informative, perhaps it's
     # better to report one or more of mean, median, sd, 
-    # MAD and skew instead
+    # MAD and skew instead (using scipy.stats.describe or
+    # the population ML estimates for original distributions),
+    # and/or the original between arguments used to create it.
     def __repr__(self):
-        dist = self.distribution
-        parameters = [str(round(arg, 2)) for arg in dist.args]
+        if hasattr(self, 'distribution'):
+            name = self.distribution.dist.name.title()
+            parameters = [str(round(arg, 2)) for arg in self.distribution.args]
+        else:
+            name = 'Transformed'
+            parameters = [str(round(arg, 2)) for arg in describe(self)[2:]]
+        
         return "<{name}({parameters})>".format(
-            name=dist.dist.name.title(),
+            name=name,
             parameters=', '.join(parameters)
             )
 

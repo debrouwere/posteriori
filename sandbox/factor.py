@@ -4,41 +4,41 @@ import numpy as np
 
 def first(l):
     for ix, el in enumerate(l):
-        if el is not None:
+        if el not in (None, slice(None)):
             return el, ix
 
+    return None, False
 
 class Factor(np.ndarray):
     def __new__(cls, data, categories):
         obj = np.array(data).view(cls)
         obj.factors = [categories]
-        obj.index()     
         return obj
 
-    def index(self):
-        self.categories = {}
+    def index(self, *items):
+        ixs = list(repeat(slice(None), self.ndim - 1))
         for dim, categories in enumerate(self.factors):
             for row, category in enumerate(categories):
-                ix = list(repeat(None, self.ndim - 1))
-                ix[dim] = row
-                self.categories[category] = ix
+                if category in items:
+                    ixs[dim] = row
+
+        return ixs
 
     def __getitem__(self, name):
-        if isinstance(name, str) and name in self.categories:
-            category = self.categories[name]
-            subset = self[category]
-            subset = np.squeeze(subset)
-            value, index = first(category)
+        if isinstance(name, str):
+            category = self.index(name)
+            row, dim = first(category)
+            if dim is None:
+                raise KeyError(name)
+            subset = np.squeeze(self[category])
             subset.factors = self.factors[:]
-            subset.factors.pop(index)
-            subset.index()
+            subset.factors.pop(dim)
             return subset
         else:
             return super().__getitem__(name)
 
     def __array_finalize__(self, obj):
         self.factors = getattr(obj, 'factors', [])
-        self.categories = getattr(obj, 'categories', {})
 
     def __add__(self, obj):
         # for now, we're assuming fully orthogonal categories; 
@@ -78,6 +78,9 @@ left + right + Factor([1,2], ('v', 'w'))
 # when subsetting a subset (or a subset of a subset of a subset)
 out['b']
 out['b']['x']
+# and this should also work and be equivalent to ['b']['x']
+out['x']['b']
+
 
 # for constants, we'd like to be able to do something like
 # res['a'] + 55

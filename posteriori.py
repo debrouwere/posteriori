@@ -112,6 +112,26 @@ class RandomVariable(np.ndarray):
     def var(self, *vargs, **kwargs):
         return np.asarray(self).var(*vargs, **kwargs)
 
+    def plot(self):
+        raise NotImplementedError()
+
+        import seaborn as sns
+        ax = sns.kdeplot(x)
+        # once we have support for multiple dimensions, we can add additional
+        # KDEs as follows
+        sns.kdeplot(y, ax=ax)
+        # or as follows (which also takes care of the legend and such)
+        import pandas as pd
+        df = pd.DataFrame(dict(x=x, y=y))
+        df.plot(kind='hist')
+        df.plot(kind='kde')
+        # and to generate the dataset
+        from itertools import product
+        combinations = product(*self.factors)
+        ixs = [self.index(combination) for combination in combinations]
+        data = {' × '.join(ix): self[ix] for ix in ixs}
+        pd.DataFrame(data).plot(kind='kde')
+
     # TODO
     # Gamma parameters are not very informative, perhaps it's
     # better to report one or more of mean, median, sd, 

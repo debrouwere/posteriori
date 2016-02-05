@@ -26,20 +26,6 @@ def vectorize(fn):
     return vectorized_method
 
 
-def proxy(attribute):
-    def generic_proxy(fallback_method):
-        @functools.wraps(fallback_method)
-        def proxied_method(self, *vargs, **kwargs):
-            if hasattr(self, attribute):
-                obj = getattr(self, attribute)
-                proxy_method = getattr(obj, fallback_method.__name__)
-                return proxy_method(*vargs, **kwargs)
-            else:
-                return fallback_method(self, *vargs, **kwargs)
-        return proxied_method
-    return generic_proxy
-
-
 def calc_min_interval(x, alpha):
     """
     Internal method to determine the minimum interval of

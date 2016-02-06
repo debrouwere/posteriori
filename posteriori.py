@@ -65,27 +65,43 @@ class RandomVariable(np.ndarray):
 
     @vectorize
     @proxied
-    def pdf(self, quantile):
+    def pdf(self, x):
         raise NotImplementedError()
 
     @vectorize
     @proxied
-    def cdf(self, quantile):
-        return np.mean(self <= quantile)
+    def cdf(self, x):
+        """
+        Cumulative distribution function: P(X ≤ x)
+        """
+        return np.mean(self <= x)
         
     @vectorize
     @proxied
-    def sf(self, quantile):
-        return 1 - self.cdf(quantile)        
+    def sf(self, x):
+        """
+        Survival function: P(X > x)
+        """
+        return 1 - self.cdf(x)        
 
     @vectorize
     @proxied
-    def ppf(self, prob):
-        return mstats.mquantiles(self, prob)[0]
+    def ppf(self, q):
+        """
+        Percent point function: P(X ≤ .) = q
+
+        The inverse of `cdf`.
+        """
+        return mstats.mquantiles(self, p)[0]
 
     @vectorize
     @proxied
-    def isf(self, prob):
+    def isf(self, q):
+        """
+        Inverse survival function: P(X > .) = q
+
+        The inverse of `sf`.
+        """
         return mstats.mquantiles(self, 1 - prob)[0] 
 
     @proxied

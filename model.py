@@ -45,6 +45,12 @@ def predict(variable, values):
     if variable == outcome:
         return eq
     else:
+        # remember that the SE for inverse prediction is different
+        # from the SE for a straight-up prediction
+        # TODO: figure out how to deal with cases when the 
+        # coefficient of the variable is 0
+        # (I suppose we could just use the marginal distribution of
+        # that variable then, and return that as prediction interval?)
         ix = predictors.index(variable)
         beta = model.coef_[ix]
         return (values[-1] - eq) / beta

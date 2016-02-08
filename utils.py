@@ -4,24 +4,6 @@ import collections
 import numpy as np
 
 
-def replace(string, mapping):
-    for match, replacement in mapping.items():
-        string = string.replace(match, replacement)
-    return string
-
-
-def bound(value, lower, upper):
-    return max(lower, min(upper, value))
-
-
-def round(value, ndigits=2):
-    value = builtins.round(value, ndigits)
-    if builtins.round(value) == value:
-        return int(value)
-    else:
-        return value
-
-
 def vectorize(fn):
     """
     Allows a method to accept one or more values, 
